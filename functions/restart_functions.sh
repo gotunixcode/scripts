@@ -30,3 +30,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ###############################################################################
 #!/bin/bash
+
+function restart {
+    echo "[ INFO ] - restart place holder"
+}

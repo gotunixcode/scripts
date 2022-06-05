@@ -30,3 +30,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ###############################################################################
 #!/bin/bash
+
+functon build {
+    echo "[ INFO ] - build_image place holder"
+}
