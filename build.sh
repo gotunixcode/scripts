@@ -30,3 +30,62 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ###############################################################################
 #!/bin/bash
+
+
+###############################################################################
+# Paramaters
+###############################################################################
+#   -h                      -- Display help
+#   --display_options       -- Display build options before running the build
+#   --dry                   -- Enable/Disable dry-run mode
+#   --debug                 -- Enable/Disable debugging
+#   --push                  -- Enable/Disable push to docker registry
+#   --purge                 -- Enable/Disable purging old containers, volumes,
+#                              and images
+#   --env                   -- Specify environmental file to load (you can
+#                              specify multiple files to load
+#   --tag                   -- Override the primary tag used
+#   --branch                -- Specify the branch we are building from,
+#                              this happens automatically on local builds,
+#                              but is needed for azure devops/github
+#   --build_target          -- Specify build_target (used to add custom
+#                              configuration to a container during builds)
+#   --image_name            -- Specify the name to use for the image
+#   --registry_addr         -- Specify docker registry to use
+#   --registry_org          -- Specify docker organization to use
+#   --registry_username     -- Specify username used to auth with registry
+#   --registry_password     -- Specify password used to auth with registry
+#
+# If we are building a container based on another container image we can
+# specify the registry address, orginzation, imagename, and tag to use.
+#
+#   --from_registry_addr    -- Specify source docker registry
+#   --from_registry_org     -- Specify source docker organization
+#   --from_image_name       -- Specify source container image
+#   --from_tag              -- Specify source container tag
+#
+# If we are using a remote docker system to build the image it can be
+# specified here
+#
+#   --remote_host           -- Specify a remote host to run the build on
+###############################################################################
+
+# Variables
+VERSION="1.0.1"
+DATE=$(date '+%Y%m%d')
+TIME=$(date '+%H-%M')
+PAUSE=10
+BRANCH=$(git symbolic-ref -q --short HEAD || git describe --tags --exact-match)
+FUNCTION_FILES=(
+    "functions/common_functions.sh"
+    "functions/build_functions.sh"
+)
+
+
+###############################################################################
+# MAIN - This is where all the magic happens
+###############################################################################
+START=$(date '+%Y-%m-%d at %H:%M:%S')
+echo "[ INFO ] - Script     : $0"
+echo "[ INFO ] - Paramaters : $*"
+echo "[ INFO ] - Version    : ${VERSION}"
