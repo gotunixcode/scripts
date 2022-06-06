@@ -89,3 +89,23 @@ START=$(date '+%Y-%m-%d at %H:%M:%S')
 echo "[ INFO ] - Script     : $0"
 echo "[ INFO ] - Paramaters : $*"
 echo "[ INFO ] - Version    : ${VERSION}"
+
+if [[ -n "${FUNCTION_FILES}" ]]; then
+    if [[ "$(declare -p FUNCTION_FILES)" =~ "declare -a" ]]; then
+        for file in "${FUNCTION_FILES[@]}"; do
+            if [[ -f "${file}" ]]; then
+                echo "[ INFO ] - Loading function file ${file}"
+                source ${file}
+            else
+                echo "[ CRIT ] - Function file missing: ${file}"
+                exit 1
+            fi
+        done
+    else
+        echo "[ CRIT ] - FUNCTION_FILES is not defined as an array"
+        exit 1
+    fi
+else
+    echo "[ CRIT ] - FUNCTION_FILES variable not defined"
+    exit 1
+fi

@@ -31,6 +31,6 @@
 ###############################################################################
 #!/bin/bash
 
-functon build {
+function build {
     echo "[ INFO ] - build_image place holder"
 }
