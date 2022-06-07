@@ -81,6 +81,227 @@ FUNCTION_FILES=(
     "functions/build_functions.sh"
 )
 
+function get_options {
+    OPTSPEC=":h-:"
+
+    while getopts "${OPTSPEC}" OPTCHAR; do
+        case "${OPTCHAR}" in
+            -)
+                case "${OPTARG}" in
+                    display_options)
+                        if [[ -z "${DISPLAY_OPTIONS}" || "${DISPLAY_OPTIONS}" == false ]]; then
+                            DISPLAY_OPTIONS=true
+                        else
+                            DISPLAY_OPTIONS=false
+                        fi
+                        ;;
+                    dry)
+                        if [[ -z "${DRY_RUN}" || "${DRY_RUN}" == false ]]; then
+                            DRY_RUN=true
+                        else
+                            DRY_RUN=false
+                        fi
+                        ;;
+                    debug)
+                        if [[ -z "${DEBUG}" || "${DEBUG}" == false ]]; then
+                            DEBUG=true
+                        else
+                            DEBUG=false
+                        fi
+                        ;;
+                    push)
+                        if [[ -z "${PUSH}" || "${PUSH}" == false ]]; then
+                            PUSH=true
+                        else
+                            PUSH=false
+                        fi
+                        ;;
+                    purge)
+                        if [[ -z "${PURGE}" || "${PURGE}" == false ]]; then
+                            PURGE=true
+                        else
+                            PURGE=false
+                        fi
+                        ;;
+                    env)
+                        ENV_FILE="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${ENV_FILE}" || "${ENV_FILE}" == -* ]]; then
+                            crit_message "env - ${ENV_FILE} is not valid"
+                        else
+                            ENV_FILES+=("${ENV_FILE}")
+                        fi
+                        ;;
+                    remote_host)
+                        if [[ -z "${REMOTE_HOST}" ]]; then
+                            REMOTE_HOST="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                            if [[ -z "${REMOTE_HOST}" || "${REMOTE_HOST}" == -* ]]; then
+                                crit_message "remote_host - ${REMOTE_HOST} is not valid"
+                            fi
+                        else
+                            crit_message "Only specify a single remote host for builds"
+                        fi
+                        ;;
+                    branch)
+                        BRANCH="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${BRANCH}" || "${BRANCH}" == -* ]]; then
+                            crit_message "branch - ${BRANCH} is not valid"
+                        fi
+                        ;;
+                    build_target)
+                        BUILD_TARGET="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${BUILD_TARGET}" || "${BUILD_TARGET}" == -* ]]; then
+                            crit_message "build_target - ${BUILD_TARGET} is not valid"
+                        else
+                            BUILD_TARGETS+=("${BUILD_TARGET}")
+                        fi
+                        ;;
+                    tag)
+                        TAG_OVERRIDE="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${TAG_OVERRIDE}" || "${TAG_OVERRIDE}" == -* ]]; then
+                            crit_message "tag - ${TAG_OVERRIDE} is not valid"
+                        fi
+                        ;;
+                    image_name)
+                        IMAGE_NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${IMAGE_NAME}" || "${IMAGE_NAME}" == -* ]]; then
+                            crit_message "image_name - ${IMAGE_NAME} is not valid"
+                        fi
+                        ;;
+                    registry_addr)
+                        REGISTRY_ADDR="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${REGISTRY_ADDR}" || "${REGISTRY_ADDR}" == -* ]]; then
+                            crit_message "registry_addr - ${REGISTRY_ADDR} is not valid"
+                        fi
+                        ;;
+                    registry_org)
+                        REGISTRY_ORG="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${REGISTRY_ORG}" || "${REGISTRY_ORG}" == -* ]]; then
+                            crit_message "registry_org - ${REGISTRY_ORG} is not valid"
+                        fi
+                        ;;
+                    registry_username)
+                        REGISTRY_USERNAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${REGISTRY_USERNAME}" || "${REGISTRY_USERNAME}" == -* ]]; then
+                            crit_message "registry_username - ${REGISTRY_USERNAME} is not valid"
+                        fi
+                        ;;
+                    registry_password)
+                        REGISTRY_PASSWORD="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${REGISTRY_PASSWORD}" || "${REGISTRY_PASSWORD}" == -* ]]; then
+                            crit_message "registry_password - ${REGISTRY_PASSWORD} is not valid"
+                        fi
+                        ;;
+                    from_registry_addr)
+                        FROM_REGISTRY_ADDR="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${FROM_REGISTRY_ADDR}" || "${FROM_REGISTRY_ADDR}" == -* ]]; then
+                            crit_message "from_registry_addr - ${FROM_REGISTRY_ADDR} is not valid"
+                        fi
+                        SOURCE_REGISTRY=true
+                        ;;
+                    from_registry_org)
+                        FROM_REGISTRY_ORG="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${FROM_REGISTRY_ORG}" || "${FROM_REGISTRY_ORG}" == -* ]]; then
+                            crit_message "from_registry_org - ${FROM_REGISTRY_ORG} is not valid"
+                        fi
+                        SOURCE_REGISTRY=true
+                        ;;
+                    from_image_name)
+                        FROM_IMAGE_NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${FROM_IMAGE_NAME}" || "${FROM_IMAGE_NAME}" == -* ]]; then
+                            crit_message "from_image_name - ${FROM_IMAGE_NAME} is not valid"
+                        fi
+                        SOURCE_REGISTRY=true
+                        ;;
+                    from_tag)
+                        FROM_TAG="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${FROM_TAG}" || "${FROM_TAG}" == -* ]]; then
+                            crit_message "from_tag - ${FROM_TAG} is not valid"
+                        fi
+                        SOURCE_REGISTRY=true
+                        ;;
+                    *)
+                        if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
+                            crit_message "Unknown option --${OPTARG}"
+                        fi
+                        ;;
+                esac;;
+            h)
+                display_help
+                ;;
+            \?)
+                crit_message "Unknown option: ${OPTARG}"
+                ;;
+            :)
+                crit_message "${OPTARG} requires an argument"
+                exit 1
+                ;;
+        esac
+    done
+}
+
+function display_options {
+    if [[ -n "${DISPLAY_OPTIONS}" && "${DISPLAY_OPTIONS}" == true ]]; then
+        info_message "###############################################################################"
+        info_message "${0} - Build options"
+        info_message "###############################################################################"
+        info_message "General options:"
+        if [[ -z "${BRANCH}" ]]; then
+            info_message "  -> Branch               :   NONE"
+        else
+            info_message "  -> Branch               :   ${BRANCH}"
+        fi
+        if [[ -z "${DRY_RUN}" || "${DRY_RUN}" == false ]]; then
+            info_message "  -> Dry run              :   FALSE"
+        else
+            info_message "  -> Dry run              :   TRUE"
+        fi
+        if [[ -z "${DEBUG}" || "${DEBUG}" == false ]]; then
+            info_message "  -> Debugging            :   FALSE"
+        else
+            info_message "  -> Debugging            :   TRUE"
+        fi
+        if [[ -z "${PURGE}" || "${PURGE}" == false ]]; then
+            info_message "  -> Purge                :   FALSE"
+        else
+            info_message "  -> Purge                :   TRUE"
+        fi
+        if [[ -z "${PUSH}" || "${PUSH}" == false ]]; then
+            info_message "  -> Push                 :   FALSE"
+        else
+            info_message "  -> Push                 :   TRUE"
+        fi
+        if [[ ! -z "${REMOTE_HOST}" ]]; then
+            info_message "  -> Remote build host    :   ${REMOTE_HOST}"
+        fi
+        if [[ ! -z "${SOURCE_REGISTRY}" ]]; then
+            info_message "Source Registry (If any):"
+            info_message "  -> Image name           :   ${FROM_IMAGE_NAME}"
+            info_message "  -> Image tag            :   ${FROM_TAG}"
+            info_message "  -> Registry address     :   ${FROM_REGISTRY_ADDR}"
+            info_message "  -> Registry organization:   ${FROM_REGISTRY_ORG}"
+        fi
+        info_message "Destination registry:"
+        info_message "  -> Image name           :   ${IMAGE_NAME}"
+        info_message "  -> Tags:"
+        info_message "      -> Primary tag      :   ${PRIMARY_TAG}"
+        info_message "      -> Secondary tag    :   ${SECONDARY_TAG}"
+        info_message "  -> Registry address     :   ${REGISTRY_ADDR}"
+        info_message "  -> Registry organization:   ${REGISTRY_ORG}"
+        info_message "  -> Registry username    :   ${REGISTRY_USERNAME}"
+        info_message "  -> Registry password    :   ${REGISTRY_PASSWORD}"
+        if [[ ! -z "${ENV_FILES}" ]]; then
+            info_message "Environmental files:"
+            for env_file in "${ENV_FILES[@]}"; do
+                info_message "  -> Environmental file   :   ${env_file}"
+            done
+        fi
+        info_message "###############################################################################"
+    fi
+}
+
+function display_help {
+    echo "Help file"
+}
 
 ###############################################################################
 # MAIN - This is where all the magic happens
@@ -109,3 +330,15 @@ else
     echo "[ CRIT ] - FUNCTION_FILES variable not defined"
     exit 1
 fi
+
+run_command "docker --version"
+get_options "$@"
+generate_tags
+load_environment_files
+info_message "Build started at ${START}"
+display_options
+build
+
+END=$(date '+%Y-%m-%d at %H:%M:%S')
+info_message "Build completed at: ${END}"
+info_message "[TAGS: ${PRIMARY_TAG}, ${SECONDARY_TAG}]"

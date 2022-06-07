@@ -31,6 +31,18 @@
 ###############################################################################
 #!/bin/bash
 
+function info_message {
+    echo "[ INFO ] - ${1}"
+}
+
+function warn_message {
+    echo "[ WARN ] - ${1}"
+}
+
+function crit_message {
+    echo "[ CRIT ] - ${1}"
+    exit 1
+}
 
 function run_command {
     echo "[ INFO ] - Running command: [${1}]"
@@ -38,40 +50,37 @@ function run_command {
         if [[ -z "${DEBUG}" || "${DEBUG}" == false ]]; then
             eval "${1} > /dev/null 2>&1"
             if [ $? -eq 0 ]; then
-                echo "[ INFO ] - Command completed successfully"
+                info_message "Command completed successfully"
             else
-                echo "[ CRIT ] - Command failure"
-                exit 1
+                crit_message "Command failure"
             fi
         else
             eval "${1}"
             if [ $? -eq 0 ]; then
-                echo "[ INFO ] - Command completed successfully"
+                info_message "Command completed successfully"
             else
-                echo "[ CRIT ] - Command failure"
-                exit 1
+                crit_message "Command failure"
             fi
         fi
     fi
 }
 
-function load_environmental_files {
+function load_environment_files {
     if [[ -n "${ENV_FILES}" ]]; then
         if [[ "$(declare -p ENV_FILES)" =~ "declare -a" ]]; then
             for env_file in "${ENV_FILES[@]}"; do
                 if [[ -f "${env_file}" ]]; then
-                    echo "[ INFO ] - Loading environmental file: ${env_file}"
+                    info_message "Loading environmental file: ${env_file}"
                     source ${env_file}
                 else
-                    echo "[ WARN ] - Environmental file missing: ${env_file}"
+                    warn_message "Environmental file missing: ${env_file}"
                 fi
             done
         else
-            echo "[ CRIT ] - ENV_FILES was not defined as an array"
-            exit 1
+            crit_message "ENV_FILES was not defined as an array"
         fi
     else
-        info "[ WARN ] - ENV_FILES variable is not defined"
+        warn_message "ENV_FILES variable is not defined"
     fi
 }
 
