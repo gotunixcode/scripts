@@ -398,11 +398,13 @@ else
 fi
 
 run_command "docker --version"
+PLATFORM="docker"
 get_options "$@"
 generate_tags
 load_environment_files
 info_message "Build started at ${START}"
 display_options
+docker_run "system prune -a" "echo y |"
 build
 
 END=$(date '+%Y-%m-%d at %H:%M:%S')

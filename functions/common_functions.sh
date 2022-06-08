@@ -99,3 +99,50 @@ function generate_tags {
         SECONDARY_TAG=${BRANCH}
     fi
 }
+
+function docker_purge {
+    if [[ "${PLATFORM}" == "docker" ]]; then
+        if [[ "${PURGE}" == true ]]; then
+            if [[ -z "${REMOTE_HOST}" ]]; then
+                run_command "echo y | docker system prune -a"
+            else
+                if [[ "$(declare -p REMOTE_HOST)" =~ "declare -a" ]]; then
+                    for remote_host in "${REMOTE_HOST[@]}"; do
+                        run_command "echo y | docker -H ${remote_host} system prune -a"
+                    done
+                else
+                    run_command "echo y | docker -H ${REMOTE_HOST} system prune -a"
+                fi
+            fi
+        fi
+    fi
+}
+
+function docker_push {
+    if [[ -n "${PUSH}" && "${PUSH}" == true ]]; then
+        if [[ -z "${REGISTRY_USERNAME}" || -z "${REGISTRY_PASSWORD}" ]]; then
+            info_message "Registry username or password not supplied (AUTHENTICATION DISABLED)"
+        else
+            run_command "docker login --username ${REGISTRY_USERNAME} --password ${REGISTRY_PASSWORD}"
+        fi
+    else
+        info_message "Skipping push to registry"
+    fi
+}
+
+function docker_run {
+    PREFIX=${2}
+    COMMAND=${1}
+
+    if [[ -z "${REMOTE_HOST}" ]]; then
+        run_command "${PREFIX} docker ${COMMAND}"
+    else
+        if [[ "$(declare -p REMOTE_HOST)" =~ "declare -a" ]]; then
+            for remote_host in "${REMOTE_HOST[@]}"; do
+                run_command "${PREFIX} doker -H ${remote_host} ${COMMAND}"
+            done
+        else
+            run_command "${PREFIX} docker -H ${REMOTE_HOST} ${COMMAND}"
+        fi
+    fi
+}
