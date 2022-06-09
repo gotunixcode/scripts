@@ -149,7 +149,6 @@ function docker_run {
 
 function docker_stop {
     DOCKER_HOST=${1}
-
     if [ "$(docker -H ${DOCKER_HOST} ps -qa -f name=${CONTAINER_NAME})" ]; then
         info_message "Container [${CONTAINER_NAME}] found on ${DOCKER_HOST}"
         if [ "$(docker -H ${DOCKER_HOST} ps -q -f name=${CONTAINER_NAME})" ]; then
@@ -169,5 +168,14 @@ function docker_rm {
         fi
         info_message "Removing container [${CONTAINER_NAME}] on ${DOCKER_HOST}"
         run_command "docker -H ${DOCKER_HOST} rm ${CONTAINER_NAME}"
+    fi
+}
+
+function docker_volume_rm {
+    DOCKER_HOST=${1}
+    VOLUME=${2}
+    docker -H ${DOCKER_HOST} volume inspect ${VOLUME} > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        run_command "docker -H ${DOCKER_HOST} volume rm ${VOLUME}"
     fi
 }
