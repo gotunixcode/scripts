@@ -146,3 +146,28 @@ function docker_run {
         fi
     fi
 }
+
+function docker_stop {
+    DOCKER_HOST=${1}
+
+    if [ "$(docker -H ${DOCKER_HOST} ps -qa -f name=${CONTAINER_NAME})" ]; then
+        info_message "Container [${CONTAINER_NAME}] found on ${DOCKER_HOST}"
+        if [ "$(docker -H ${DOCKER_HOST} ps -q -f name=${CONTAINER_NAME})" ]; then
+            info_message "Stopping container [${CONTAINER_NAME}] on ${DOCKER_HOST}"
+            run_command "docker -H ${DOCKER_HOST} stop ${CONTAINER_NAME}"
+        fi
+    fi
+}
+
+function docker_rm {
+    DOCKER_HOST=${1}
+    if [ "$(docker -H ${DOCKER_HOST} ps -qa -f name=${CONTAINER_NAME})" ]; then
+        info_message "Container [${CONTAINER_NAME}] found on ${DOCKER_HOST}"
+        if [ "$(docker -H ${DOCKER_HOST} ps -q -f name=${CONTAINER_NAME})" ]; then
+            info_message "Stopping container [${CONTAINER_NAME}] on ${DOCKER_HOST}"
+            run_command "docker -H ${DOCKER_HOST} stop ${CONTAINER_NAME}"
+        fi
+        info_message "Removing container [${CONTAINER_NAME}] on ${DOCKER_HOST}"
+        run_command "docker -H ${DOCKER_HOST} rm ${CONTAINER_NAME}"
+    fi
+}

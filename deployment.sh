@@ -335,3 +335,4 @@ info_message "Deployment started at: ${START}"
 deployment
 END=$(date '+%Y-%m-%d at %H:%M:%S')
 info_message "Deployment completed at: ${END}"
+
