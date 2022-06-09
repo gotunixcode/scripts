@@ -179,3 +179,14 @@ function docker_volume_rm {
         run_command "docker -H ${DOCKER_HOST} volume rm ${VOLUME}"
     fi
 }
+
+function docker_volume_create {
+    DOCKER_HOST=${1}
+    VOLUME=${2}
+    docker -H ${DOCKER_HOST} volume inspect ${VOLUME} > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        info_message "Docker volume ${VOLUME} already present on ${DOCKER_HOST}"
+    else
+        run_command "docker -H ${DOCKER_HOST} volume create ${VOLUME}"
+    fi
+}
