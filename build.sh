@@ -273,6 +273,12 @@ function display_options {
         if [[ ! -z "${REMOTE_HOST}" ]]; then
             info_message "  -> Remote build host    :   ${REMOTE_HOST}"
         fi
+        if [[ ! -z "${BUILD_TARGETS}" ]]; then
+            info_message "Build target(s):"
+            for build_target in "${BUILD_TARGETS[@]}"; do
+                info_message "  -> Build target         :   ${build_target}"
+            done
+        fi
         if [[ ! -z "${SOURCE_REGISTRY}" ]]; then
             info_message "Source Registry (If any):"
             info_message "  -> Image name           :   ${FROM_IMAGE_NAME}"
