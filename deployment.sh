@@ -221,13 +221,23 @@ function display_options {
         fi
         info_message "  -> Container name       :   ${CONTAINER_NAME}"
         info_message "  -> Docker compose       :   ${COMPOSE_FILE}"
-        if [[ ! -z "${REMOTE_HOST}" ]]; then
-            info_message "  -> Remote build host    :   ${REMOTE_HOST}"
+        if [[ ! -z "${REMOTE_HOSTS}" ]]; then
+            info_message "  -> Remote host(s):"
+            for remote_host in "${REMOTE_HOSTS[@]}"; do
+                info_message "  -> Remote host          :   ${remote_host}"
+            done
+        fi
+        if [[ ! -z "${SOURCE_TARGET}" ]]; then
+            info_message "  -> Source target        :   ${SOURCE_TARGET}"
         fi
         info_message "Registry:"
         info_message "  -> Registry address     :   ${REGISTRY_ADDR}"
         info_message "  -> Registry organization:   ${REGISTRY_ORG}"
-        info_message "  -> Image name           :   ${IMAGE_NAME}"
+        if [[ ! -z "${SOURCE_TARGET}" ]]; then
+            info_message "  -> Image name           :   ${IMAGE_NAME}-${SOURCE_TARGET}"
+        else
+            info_message "  -> Image name           :   ${IMAGE_NAME}"
+        fi
         info_message "  -> Image tag            :   ${TAG}"
         if [[ ! -z "${ENV_FILES}" ]]; then
             info_message "Environmental files:"
