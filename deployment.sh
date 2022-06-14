@@ -221,14 +221,14 @@ function display_options {
         fi
         info_message "  -> Container name       :   ${CONTAINER_NAME}"
         info_message "  -> Docker compose       :   ${COMPOSE_FILE}"
+        if [[ ! -z "${SOURCE_TARGET}" ]]; then
+            info_message "  -> Source target        :   ${SOURCE_TARGET}"
+        fi
         if [[ ! -z "${REMOTE_HOST}" ]]; then
-            info_message "  -> Remote host(s):"
+            info_message "Remote host(s):"
             for remote_host in "${REMOTE_HOST[@]}"; do
                 info_message "  -> Remote host          :   ${remote_host}"
             done
-        fi
-        if [[ ! -z "${SOURCE_TARGET}" ]]; then
-            info_message "  -> Source target        :   ${SOURCE_TARGET}"
         fi
         info_message "Registry:"
         info_message "  -> Registry address     :   ${REGISTRY_ADDR}"
