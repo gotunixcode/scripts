@@ -302,9 +302,9 @@ function display_options {
             done
         fi
         info_message "###############################################################################"
-        info_message ""
-        info_message "Pausing for ${PAUSE} seconds"
-        sleep ${PAUSE}
+#        info_message ""
+#        info_message "Pausing for ${PAUSE} seconds"
+#        sleep ${PAUSE}
     fi
 }
 
