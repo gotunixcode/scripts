@@ -221,9 +221,9 @@ function display_options {
         fi
         info_message "  -> Container name       :   ${CONTAINER_NAME}"
         info_message "  -> Docker compose       :   ${COMPOSE_FILE}"
-        if [[ ! -z "${REMOTE_HOSTS}" ]]; then
+        if [[ ! -z "${REMOTE_HOST}" ]]; then
             info_message "  -> Remote host(s):"
-            for remote_host in "${REMOTE_HOSTS[@]}"; do
+            for remote_host in "${REMOTE_HOST[@]}"; do
                 info_message "  -> Remote host          :   ${remote_host}"
             done
         fi
