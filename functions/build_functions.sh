@@ -42,7 +42,7 @@ function build {
             run_build "localhost"
         else
             if [[ "$(declare -p REMOTE_HOST)" =~ "declare -a" ]]; then
-                for remote_host "${REMOTE_HOST[@]}"; do
+                for remote_host in "${REMOTE_HOST[@]}"; do
                     run_build "${remote_host}"
                 done
             else
