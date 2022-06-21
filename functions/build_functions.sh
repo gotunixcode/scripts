@@ -32,5 +32,29 @@
 #!/bin/bash
 
 function build {
-    echo "[ INFO ] - build_image place holder"
+    # Add checks for environmental variables that are required.
+    if [[ -z "${IMAGE_NAME}" || -z "${REGISTRY_ADDR}" || -z "${REGISTRY_ORG}" || \
+          -z "${PRIMARY_TAG}" || -z "${SECONDARY_TAG}" || -z "${PLATFORM}" ]]; then
+        crit_message "Required environmental variables missing"
+    fi
+    if [[ "${PLATFORM}" == "docker" ]]; then
+        if [[ -z "${REMOTE_HOST}" ]]; then
+            run_build "localhost"
+        else
+            if [[ "$(declare -p REMOTE_HOST)" =~ "declare -a" ]]; then
+                for remote_host "${REMOTE_HOST[@]}"; do
+                    run_build "${remote_host}"
+                done
+            else
+                run_build "${REMOTE_HOST}"
+            fi
+        fi
+    else
+        crit_message "Builds only supported on Docker"
+    fi
+}
+
+function run_build {
+    DOCKER_HOST="${1}"
+    echo "Run build"
 }

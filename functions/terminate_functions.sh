@@ -32,5 +32,29 @@
 #!/bin/bash
 
 function terminate {
-    echo "[ INFO ] - terminate - place holder"
+    # Add any additional enviromental variables to check for
+    if [[ -z "${CONTAINER_NAME}" || -z "${PLATFORM}" ]]; then
+        crit_message "Required environemntal variables missing"
+    fi
+    if [[ "${PLATFORM}" == "docker" ]]; then
+        if [[ -z "${REMOTE_HOST}" ]]; then
+            run_terminate "localhost"
+        else
+            if [[ "$(declare -p REMOTE_HOST)" =~ "declare -a" ]]; then
+                for remote_host in "${REMOTE_HOST[@]}"; do
+                    run_terminate "${remote_host}"
+                done
+            else
+                run_terminate "${REMOTE_HOST}"
+            fi
+        fi
+    else
+        crit_message "Only supported on docker"
+    fi
+}
+
+function run_terminate {
+    DOCKER_HOST="${1}"
+
+    echo "Terminate"
 }

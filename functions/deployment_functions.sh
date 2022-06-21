@@ -32,5 +32,33 @@
 #!/bin/bash
 
 function deployment {
-    echo "[ INFO ] - deploy place holder"
+    # Add any ENVIRONMENTAL variables required here
+    if [[ -z "${IMAGE_NAME}" || -z "${CONTAINER_NAME}" || -z "${TAG}" || \
+          -z "${PLATFORM}" || -z "${REGISTRY_ADDR}" || -z "${REGISTRY_ORG}" ]]; then
+        crit_message "Required environemntal variables missing"
+    fi
+    if [[ "${PLATFORM}" == "docker" ]]; then
+        if [[ -z "${REMOTE_HOST}" ]]; then
+            docker_rm "localhost" "${CONTAINER_NAME}"
+            run_deployment "localhost"
+        else
+            if [[ "$(declare -p REMOTE_HOST)" =~ "declare -a" ]]; then
+                for remote_host in "${REMOTE_HOST[@]}"; do
+                    docker_rm "${remote_host}" "${CONTAINER_NAME}"
+                    run_deployment "${remote_host}"
+                done
+            else
+                docker_rm "${REMOTE_HOST}" "${CONTAINER_NAME}"
+                run_deployment "${REMOTE_HOST}"
+            fi
+        fi
+    else
+        crit_message "Only docker supported currently"
+    fi
+}
+
+function run_deployment {
+    DOCKER_HOST="${1}"
+
+    echo "Deployment"
 }
