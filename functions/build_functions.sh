@@ -49,8 +49,6 @@ function build {
                 run_build "${REMOTE_HOST}"
             fi
         fi
-    else
-        crit_message "Builds only supported on Docker"
     fi
 }
 
