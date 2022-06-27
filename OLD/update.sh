@@ -31,54 +31,32 @@
 ###############################################################################
 #!/bin/bash
 
-# Variables
-VERSION="1.0.1"
-DATE=$(date '+%Y%m%d')
-TIME=$(date '+%H-%M')
-PAUSE=10
-BRANCH=$(git symbolic-ref -q --short HEAD || git describe --tags --exact-match)
-FUNCTION_FILES=(
-    "functions/common_functions.sh"
-    "functions/build_functions.sh"
-)
+UPDATE_URL="https://raw.githubusercontent.com/gotunixcode/scripts/main"
+SCRIPTS=("build")
 
-###############################################################################
-# MAIN - This is where all the magic happens
-###############################################################################
-START=$(date '+%Y-%m-%d at %H:%M:%S')
-echo "[ INFO ] - Script     : $0"
-echo "[ INFO ] - Paramaters : $*"
-echo "[ INFO ] - Version    : ${VERSION}"
-
-if [[ -n "${FUNCTION_FILES}" ]]; then
-    if [[ "$(declare -p FUNCTION_FILES)" =~ "declare -a" ]]; then
-        for file in "${FUNCTION_FILES[@]}"; do
-            if [[ -f "${file}" ]]; then
-                echo "[ INFO ] - Loading function file ${file}"
-                source ${file}
-            else
-                echo "[ CRIT ] - Function file missing: ${file}"
-                exit 1
-            fi
-        done
+function run_command {
+    echo "[ INFO ] - Running command: [${1}]"
+    eval "${1} > /dev/null 2>&1"
+    if [ $? -eq 0 ]; then
+        echo "[ INFO ] - Command completed successfully"
     else
-        echo "[ CRIT ] - FUNCTION_FILES is not defined as an array"
+        echo "[ CRIT ] - Command failure"
         exit 1
     fi
-else
-    echo "[ CRIT ] - FUNCTION_FILES variable not defined"
-    exit 1
+}
+
+for script in "${SCRIPTS[@]}"; do
+    run_command "wget ${UPDATE_URL}/${script}.sh -O ${script}.sh"
+    run_command "chmod 0700 ${script}.sh"
+done
+
+if [[ ! -d "./functions" ]]; then
+    run_command "mkdir functions"
 fi
 
-run_command "docker --version"
-PLATFORM="docker"
-get_options "$@"
-generate_tags
-load_environment_files
-info_message "Build started at ${START}"
-display_options
-build
-
-END=$(date '+%Y-%m-%d at %H:%M:%S')
-info_message "Build completed at: ${END}"
-info_message "[TAGS: ${PRIMARY_TAG}, ${SECONDARY_TAG}]"
+run_command "wget ${UPDATE_URL}/functions/common_functions.sh -O functions/common_functions.sh"
+for script in "${SCRIPTS[@]}"; do
+    if [[ ! -f "functions/${script}_functions.sh" ]]; then
+        run_command "wget ${UPDATE_URL}/functions/${script}_functions.sh -O functions/${script}_functions.sh"
+    fi
+done

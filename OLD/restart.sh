@@ -31,54 +31,8 @@
 ###############################################################################
 #!/bin/bash
 
-# Variables
-VERSION="1.0.1"
-DATE=$(date '+%Y%m%d')
-TIME=$(date '+%H-%M')
-PAUSE=10
-BRANCH=$(git symbolic-ref -q --short HEAD || git describe --tags --exact-match)
-FUNCTION_FILES=(
-    "functions/common_functions.sh"
-    "functions/build_functions.sh"
-)
-
 ###############################################################################
-# MAIN - This is where all the magic happens
+# Paramaters
 ###############################################################################
-START=$(date '+%Y-%m-%d at %H:%M:%S')
-echo "[ INFO ] - Script     : $0"
-echo "[ INFO ] - Paramaters : $*"
-echo "[ INFO ] - Version    : ${VERSION}"
-
-if [[ -n "${FUNCTION_FILES}" ]]; then
-    if [[ "$(declare -p FUNCTION_FILES)" =~ "declare -a" ]]; then
-        for file in "${FUNCTION_FILES[@]}"; do
-            if [[ -f "${file}" ]]; then
-                echo "[ INFO ] - Loading function file ${file}"
-                source ${file}
-            else
-                echo "[ CRIT ] - Function file missing: ${file}"
-                exit 1
-            fi
-        done
-    else
-        echo "[ CRIT ] - FUNCTION_FILES is not defined as an array"
-        exit 1
-    fi
-else
-    echo "[ CRIT ] - FUNCTION_FILES variable not defined"
-    exit 1
-fi
-
-run_command "docker --version"
-PLATFORM="docker"
-get_options "$@"
-generate_tags
-load_environment_files
-info_message "Build started at ${START}"
-display_options
-build
-
-END=$(date '+%Y-%m-%d at %H:%M:%S')
-info_message "Build completed at: ${END}"
-info_message "[TAGS: ${PRIMARY_TAG}, ${SECONDARY_TAG}]"
+#   -h                      -- Display help
+###############################################################################

@@ -31,6 +31,31 @@
 ###############################################################################
 #!/bin/bash
 
+###############################################################################
+# Paramaters
+###############################################################################
+#   -h                      -- Display help
+#   --display_options       -- Display termination options before running
+#   --dry                   -- Enable/disable dry-run mode
+#   --debug                 -- Enable/disable debug mode
+#   --purge                 -- Enable/disable docker purge
+#   --env                   -- Specify one or more environment files to load
+#   --container_name        -- Name of the container running
+#   --compose_file          -- Specify compose file
+#   --remote_host           -- Specify remote host
+#   --platform              -- Specify platform (docker, swarm, kubernetes)
+###############################################################################
+
+# Variables
+VERSION="1.0.1"
+DATE=$(date '+%Y%m%d')
+TIME=$(date '+%H-%M')
+PAUSE=10
+FUNCTION_FILES=(
+    "functions/common_functions.sh"
+    "functions/terminate_functions.sh"
+)
+
 function get_options {
     OPTSPEC=":h-:"
 
@@ -45,7 +70,6 @@ function get_options {
                             DISPLAY_OPTIONS=false
                         fi
                         ;;
-
                     dry)
                         if [[ -z "${DRY_RUN}" || "${DRY_RUN}" == false ]]; then
                             DRY_RUN=true
@@ -53,7 +77,6 @@ function get_options {
                             DRY_RUN=false
                         fi
                         ;;
-
                     debug)
                         if [[ -z "${DEBUG}" || "${DEBUG}" == false ]]; then
                             DEBUG=true
@@ -61,15 +84,6 @@ function get_options {
                             DEBUG=false
                         fi
                         ;;
-
-                    push)
-                        if [[ -z "${PUSH}" || "${PUSH}" == false ]]; then
-                            PUSH=true
-                        else
-                            PUSH=false
-                        fi
-                        ;;
-
                     purge)
                         if [[ -z "${PURGE}" || "${PURGE}" == false ]]; then
                             PURGE=true
@@ -77,7 +91,6 @@ function get_options {
                             PURGE=false
                         fi
                         ;;
-
                     env)
                         ENV_FILE="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                         if [[ -z "${ENV_FILE}" || "${ENV_FILE}" == -* ]]; then
@@ -86,40 +99,39 @@ function get_options {
                             ENV_FILES+=("${ENV_FILE}")
                         fi
                         ;;
-
                     remote_host)
-                        if [[ -z "${REMOTE_HOST}" ]]; then
-                            REMOTE_HOST="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                            if [[ -z "${REMOTE_HOST}" || "${REMOTE_HOST}" == -* ]]; then
-                                crit_message "remote_host - ${REMOTE_HOST} is not valid"
-                            fi
+                        RHOST="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${RHOST}" || "${RHOST}" == -* ]]; then
+                            crit_message "remote_host - ${RHOST} is not valid"
                         else
-                            crit_message "Only specify a single remote host for builds"
+                            REMOTE_HOST+=("${RHOST}")
                         fi
                         ;;
-
-                    branch)
-                        BRANCH="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                        if [[ -z "${BRANCH}" || "${BRANCH}" == -* ]]; then
-                            crit_message "branch - ${BRANCH} is not valid"
+                    container_name)
+                        CONTAINER_NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${CONTAINER_NAME}" || "${CONTAINER_NAME}" == -* ]]; then
+                            crit_message "container_name - ${CONTAINER_NAME} is not valid"
                         fi
                         ;;
-
-                    tag)
-                        TAG_OVERRIDE="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                        if [[ -z "${TAG_OVERRIDE}" || "${TAG_OVERRIDE}" == -* ]]; then
-                            crit_message "tag - ${TAG_OVERRIDE} is not valid"
+                    compose_file)
+                        COMPOSE_FILE="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${COMPOSE_FILE}" || "${COMPOSE_FILE}" == -* ]]; then
+                            crit_message "compose_file - ${COMPOSE_FILE} is not valid"
+                        fi
+                        ;;
+                    platform)
+                        PLATFORM="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        if [[ -z "${PLATFORM}" || "${PLATFORM}" == -* ]]; then
+                            crit_message "platform - ${PLATFORM} is not valid"
                         fi
                         ;;
                 esac;;
             h)
                 display_help
                 ;;
-
             \?)
                 crit_message "Unknown option: ${OPTARG}"
                 ;;
-
             :)
                 crit_message "${OPTARG} requires an argument"
                 ;;
@@ -127,24 +139,16 @@ function get_options {
     done
 }
 
-
-function display_help {
-    echo "Display help"
-    exit 1
-}
-
 function display_options {
     if [[ -n "${DISPLAY_OPTIONS}" && "${DISPLAY_OPTIONS}" == true ]]; then
         info_message "###############################################################################"
-        info_message "${0} - Build options"
+        info_message "${0} - Termination options"
         info_message "###############################################################################"
-        info_message "General:"
-        info_message "  -> Platform             :   ${PLATFORM}"
-        info_message "  -> Branch               :   ${BRANCH}"
+        info_message "General options:"
         if [[ -z "${DRY_RUN}" || "${DRY_RUN}" == false ]]; then
-            info_message "  -> Dry Run              :   FALSE"
+            info_message "  -> Dry run              :   FALSE"
         else
-            info_message "  -> Dry Run              :   TRUE"
+            info_message "  -> Dry run              :   TRUE"
         fi
         if [[ -z "${DEBUG}" || "${DEBUG}" == false ]]; then
             info_message "  -> Debugging            :   FALSE"
@@ -156,29 +160,18 @@ function display_options {
         else
             info_message "  -> Purge                :   TRUE"
         fi
-        if [[ -z "${PUSH}" || "${PUSH}" == false ]]; then
-            info_message "  -> Push                 :   FALSE"
-        else
-            info_message "  -> Push                 :   TRUE"
+        info_message "  -> Container name       :   ${CONTAINER_NAME}"
+        info_message "  -> Compose file         :   ${COMPOSE_FILE}"
+        if [[ ! -z "${REMOTE_HOST}" ]]; then
+            info_message "Remote hosts:"            
+            if [[ "$(declare -p FUNCTION_FILES)" =~ "declare -a" ]]; then
+                for remote_host in "${REMOTE_HOST[@]}"; do
+                    info_message "  -> Remote host    :   ${remote_host}"
+                done
+            else
+                info_message "  -> Remote host    :   ${REMOTE_HOST}"
+            fi
         fi
-        info_message "Remote Host:"
-        info_message "  -> Remote host          :   ${REMOTE_HOST}"
-        info_message "Build:"
-        info_message "  -> Image name           :   ${IMAGE_NAME}"
-        info_message "  -> Tags:"
-        info_message "      -> Primary tag      :   ${PRIMARY_TAG}"
-        info_message "      -> Secondary tag    :   ${SECONDARY_TAG}"
-        if [[ ! -z "${BUILD_TARGETS}" ]]; then
-            info_message "  -> Build target(s):"
-            for build_target in "${BUILD_TARGETS[@]}"; do
-                info_message "      -> Target           :   ${build_target}"
-            done
-        fi
-        info_message "Destination Registry:"
-        info_message "  -> Registry address     :   ${REGISTRY_ADDR}"
-        info_message "  -> Registry organization:   ${REGISTRY_ORG}"
-        info_message "  -> Registry username    :   ${REGISTRY_USERNAME}"
-        info_message "  -> Registry password    :   ${REGISTRY_PASSWORD}"
         if [[ ! -z "${ENV_FILES}" ]]; then
             info_message "Environmental files:"
             for env_file in "${ENV_FILES[@]}"; do
@@ -189,28 +182,43 @@ function display_options {
     fi
 }
 
-function build {
-    # Add checks for environmental variables that are required.
-    if [[ -z "${IMAGE_NAME}" || -z "${REGISTRY_ADDR}" || -z "${REGISTRY_ORG}" || \
-          -z "${PRIMARY_TAG}" || -z "${SECONDARY_TAG}" || -z "${PLATFORM}" ]]; then
-        crit_message "Required environmental variables missing"
-    fi
-    if [[ "${PLATFORM}" == "docker" ]]; then
-        if [[ -z "${REMOTE_HOST}" ]]; then
-            run_build "localhost"
-        else
-            if [[ "$(declare -p REMOTE_HOST)" =~ "declare -a" ]]; then
-                for remote_host in "${REMOTE_HOST[@]}"; do
-                    run_build "${remote_host}"
-                done
-            else
-                run_build "${REMOTE_HOST}"
-            fi
-        fi
-    fi
+function display_help {
+    echo "Help file"
+    exit 1
 }
 
-function run_build {
-    DOCKER_HOST="${1}"
-    echo "Run build"
-}
+###############################################################################
+# MAIN - THis is where all the magic happens
+###############################################################################
+START=$(date '+%Y-%m-%d at %H:%M:%S')
+echo "[ INFO ] - Script     : $0"
+echo "[ INFO ] - Paramaters : $*"
+echo "[ INFO ] - Version    : ${VERSION}"
+
+if [[ -n "${FUNCTION_FILES}" ]]; then
+    if [[ "$(declare -p FUNCTION_FILES)" =~ "declare -a" ]]; then
+        for file in "${FUNCTION_FILES[@]}"; do
+            if [[ -f "${file}" ]]; then
+                echo "[ INFO ] - Loading ${file}"
+                source ${file}
+            else
+                echo "[ CRIT ] - Function file missing: ${file}"
+                exit 1
+            fi
+        done
+    else
+        echo "[ CRIT ] - FUNCTION_FILES is not defined as an array"
+        exit 1
+    fi
+else
+    echo "[ CRIT ] - FUNCTION_FILES variable is not defined"
+    exit 1
+fi
+
+get_options "$@"
+load_environment_files
+display_options
+info_message "Termination started at: ${START}"
+terminate
+END=$(date '+%Y-%m-%d at %H:%M:%S')
+info_message "Termination completed at: ${END}"
