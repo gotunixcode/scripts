@@ -165,7 +165,7 @@ function display_options {
         info_message "  -> Remote host          :   ${REMOTE_HOST}"
         info_message "Build:"
         if [[ ! -z "${DOCKERFILE}" ]]; then
-            info_message "  -> Dockerfile           :   ${DOCKERFILE}}"
+            info_message "  -> Dockerfile           :   ${DOCKERFILE}"
         else
             info_message "  -> Dockerfile           :   NONE"
         fi
