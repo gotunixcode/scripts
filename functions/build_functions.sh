@@ -164,6 +164,11 @@ function display_options {
         info_message "Remote Host:"
         info_message "  -> Remote host          :   ${REMOTE_HOST}"
         info_message "Build:"
+        if [[ ! -z "${DOCKERFILE}" ]]; then
+            info_message "  -> Dockerfile           :   ${DOCKERFILE}}"
+        else
+            info_message "  -> Dockerfile           :   NONE"
+        fi
         info_message "  -> Image name           :   ${IMAGE_NAME}"
         info_message "  -> Tags:"
         info_message "      -> Primary tag      :   ${PRIMARY_TAG}"
