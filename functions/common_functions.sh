@@ -172,6 +172,15 @@ function docker_rm {
     fi
 }
 
+function docker_service_rm {
+    DOCKER_HOST=${1}
+    CONTAINER=${2}
+    if [ "$(docker -H ${DOCKER_HOST} service ps ${CONTAINER})" ]; then
+        info_message "[${DOCKER_HOST}] - Removing ${CONTAINER} service"
+        run_command "docker -H ${DOCKER_HOST} service rm ${CONTAINER_NAME}"
+    fi
+}
+
 function docker_volume_rm {
     DOCKER_HOST=${1}
     VOLUME=${2}
